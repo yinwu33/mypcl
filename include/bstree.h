@@ -1,21 +1,21 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
-namespace mypcl
-{
-
+namespace mypcl {
 template<typename T>
 struct TreeNode {
-  using Ptr = TreeNode*;
+  using Ptr = TreeNode *;
 
   TreeNode() = default;
-  TreeNode(T key_, int value_);
+
+  TreeNode(T key_, int value_) : key(key_), value(value_) {}
 
   T key;
   int value;
-  TreeNode* left;
-  TreeNode* right;
+  TreeNode *left;
+  TreeNode *right;
 };
 
 /**
@@ -33,26 +33,83 @@ public:
 
   inline void deleteTree() { deleteTreeRecursively(root_); }
 
-  inline void preOrder(std::vector<T>& list) { preOrderRecursively(root_, list); }
+  inline void preOrder(std::vector<T> &list) { preOrderRecursively(root_, list); }
 
-  inline void inOrder(std::vector<T>& list) { inOrderRecursively(root_, list); }
+  inline void inOrder(std::vector<T> &list) { inOrderRecursively(root_, list); }
 
-  inline void postOrder(std::vector<T>& list) { postOrderRecursively(root_, list); }
+  inline void postOrder(std::vector<T> &list) { postOrderRecursively(root_, list); }
 
-private:
+  TreeNode<T> *search(T queryKey) { searchRecursively(root_, queryKey)};
 
-  void insertRecursively(TreeNode<T>*& root, T& key, int value);
-
-  void deleteTreeRecursively(TreeNode<T>*& root);
-
-  void preOrderRecursively(TreeNode<T>*& root, std::vector<T>& list);
-
-  void inOrderRecursively(TreeNode<T>*& root, std::vector<T>& list);
-
-  void postOrderRecursively(TreeNode<T>*& root, std::vector<T>& list);
+  // todo
+  bool kNNSearch(T queryKey, int k, std::vector<T>& results);
 
 private:
-  TreeNode<T>* root_;
+
+  void insertRecursively(TreeNode<T> *&root, T &key, int value) {
+    if (root == nullptr) {
+      root = new TreeNode<T>(key, value);
+    } else {
+      if (key < root->key)
+        insertRecursively(root->left, key, value);
+      else if (key > root->key)
+        insertRecursively(root->right, key, value);
+      else
+        std::cout << "BSTreeNode with key: " << key << " already exists!" << std::endl;
+    }
+  }
+
+  void deleteTreeRecursively(TreeNode<T> *&root) {
+    if (root) {
+      deleteTreeRecursively(root->left);
+      deleteTreeRecursively(root->right);
+      delete (root);
+    }
+  }
+
+  void preOrderRecursively(TreeNode<T> *&root, std::vector<T> &list) {
+    if (root != nullptr) {
+      list.emplace_back(root->key);
+      preOrderRecursively(root->left, list);
+      preOrderRecursively(root->right, list);
+    }
+  }
+
+  void inOrderRecursively(TreeNode<T> *&root, std::vector<T> &list) {
+    if (root != nullptr) {
+      preOrderRecursively(root->left, list);
+      list.emplace_back(root->key);
+      preOrderRecursively(root->right, list);
+    }
+  }
+
+  void postOrderRecursively(TreeNode<T> *&root, std::vector<T> &list) {
+    if (root != nullptr) {
+      preOrderRecursively(root->left, list);
+      preOrderRecursively(root->right, list);
+      list.emplace_back(root->key);
+    }
+  }
+
+  TreeNode<T> *searchRecursively(TreeNode<T> *root, T queryKey) {
+    if (root == nullptr or root->key == queryKey)
+      return root;
+
+    if (queryKey < root->key)
+      return searchRecursively(root->left, queryKey);
+
+    return searchRecursively(root->right, queryKey);
+  }
+
+  bool kNNSearchRecursively(TreeNode<T> *root, T queryKey, int k, std::vector<T>& results) {
+    if (root == nullptr)
+      return false;
+    
+    
+  }
+
+private:
+  TreeNode<T> *root_;
 
 };
 

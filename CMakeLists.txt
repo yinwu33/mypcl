@@ -12,8 +12,7 @@ find_package(Eigen3 REQUIRED)
 
 set(LIB_SOURCE  src/pca.cpp
                 src/io.cpp
-                src/types/cloud.cpp
-                src/bstree.cpp)
+                src/types/cloud.cpp)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 

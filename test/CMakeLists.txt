@@ -8,7 +8,6 @@ add_executable(test_bst test_bst.cpp)
 target_link_libraries(test_bst ${TEST_LINKED_LIBS})
 gtest_discover_tests(test_bst)
 
-
 add_executable(test_io test_io.cpp)
 target_link_libraries(test_io ${TEST_LINKED_LIBS})
 gtest_discover_tests(test_io)
