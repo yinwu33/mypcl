@@ -1,15 +1,13 @@
 #pragma once
 
-#include "types/cloud.h"
+#include "base.h"
 
 namespace mypcl
 {
 
 class KDTree {
 public:
-  KDTree();
-
-  void SetInputCloud(const Cloud::Ptr& pCloud);
+  KDTree() : Base;
 
 };
 

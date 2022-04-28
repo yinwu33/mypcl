@@ -10,7 +10,8 @@ enable_testing()
 
 find_package(Eigen3 REQUIRED)
 
-set(LIB_SOURCE  src/pca.cpp
+set(LIB_SOURCE  src/base.cpp
+                src/pca.cpp
                 src/io.cpp
                 src/types/cloud.cpp)
 
