@@ -1,141 +1,188 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
-#include "result_set.hpp"
+#include "types/knn_result_set.hpp"
+
 
 namespace mypcl {
+template<typename T>
+struct TreeNode {
+  using Ptr = TreeNode*;
 
-template<typename ElemType>
-struct BSTreeNode {
-  using Ptr = BSTreeNode*;
+  TreeNode() = delete;
 
-  ElemType key;
+  TreeNode(T key_, int value_) : key(key_), value(value_) {}
+
+  T key;
   int value;
-  BSTreeNode<ElemType>* leftNode;
-  BSTreeNode<ElemType>* rightNode;
+  TreeNode* left = nullptr;
+  TreeNode* right = nullptr;
 };
 
-template<typename ElemType>
-void Insert(BSTreeNode<ElemType>*& root, ElemType key, int index) {
-  if (root == nullptr) {
-    root = new BSTreeNode<ElemType>;
-    root->key = key;
-    root->value = index;
-    root->leftNode = nullptr;
-    root->rightNode = nullptr;
+/**
+ * @brief A Binary Tree for 1D elements
+ *
+ * @tparam T: int, float, double, etc.
+ */
+template<typename T>
+class BSTree {
+public:
+
+  BSTree() : root_(nullptr) {}
+
+  inline void insert(T key, int value = 0) { insertRecursively(root_, key, value); }
+
+  inline void deleteTree() { deleteTreeRecursively(root_); }
+
+  inline void preOrder(std::vector<T>& list) { preOrderRecursively(root_, list); }
+
+  inline void inOrder(std::vector<T>& list) { inOrderRecursively(root_, list); }
+
+  inline void postOrder(std::vector<T>& list) { postOrderRecursively(root_, list); }
+
+  TreeNode<T>* search(T queryKey) { searchRecursively(root_, queryKey); }
+
+  bool kNNSearch(T queryKey, int k, std::vector<int>& indexList, std::vector<T>& distList) {
+    KNNResultSet<T> resultSet(k);
+
+    bool isFound = kNNSearchRecursively(root_, queryKey, resultSet);
+    resultSet.getResult(indexList, distList);
+
+    return isFound;
   }
-  else {
-    if (key < root->key) {
-      Insert(root->leftNode, key, index);
-    }
-    else if (key > root->key) {
-      Insert(root->rightNode, key, index);
+
+  bool radiusSearch(T queryKey, int radius, std::vector<int>& indexList, std::vector<T>& distList) {
+    RadiusKNNResultSet<T> resultSet(radius);
+
+    bool isFound = radiusSearchRecursively(root_, queryKey, resultSet);
+    resultSet.getResult(indexList, distList);
+
+    return isFound;
+  }
+
+private:
+
+  void insertRecursively(TreeNode<T>*& root, T key, int value) {
+
+    if (root == nullptr) {
+      root = new TreeNode<T>(key, value);
     }
     else {
-      std::cout << "BSTreeNode with key: " << key << " already exists!" << std::endl;
+      if (key < root->key)
+        insertRecursively(root->left, key, value);
+      else if (key > root->key)
+        insertRecursively(root->right, key, value);
+      else
+        std::cout << "BSTreeNode with key: " << key << " already exists!" << std::endl;
     }
   }
-}
 
-template<typename ElemType>
-void DeleteTree(BSTreeNode<ElemType>* root) {
-  if (root != nullptr) {
-    DeleteTree(root->leftNode);
-    DeleteTree(root->rightNode);
-    delete(root);
-  }
-}
-
-template<typename ElemType>
-void InOrder(BSTreeNode<ElemType>* root, std::vector<ElemType>& list) {
-  if (root != nullptr) {
-    InOrder(root->leftNode, list);
-    std::cout << "key: " << root->key << " index: " << root->value << std::endl;
-    list.emplace_back(root->key);
-    InOrder(root->rightNode, list);
-  }
-}
-
-template<typename ElemType>
-void PreOrder(BSTreeNode<ElemType>* root, std::vector<ElemType>& list) {
-  if (root != nullptr) {
-    std::cout << "key: " << root->key << " index: " << root->value << std::endl;
-    list.emplace_back(root->key);
-    PreOrder(root->leftNode, list);
-    PreOrder(root->rightNode, list);
-  }
-}
-
-template<typename ElemType>
-void PostOrder(BSTreeNode<ElemType>* root, std::vector<ElemType>& list) {
-  if (root != nullptr) {
-    PostOrder(root->leftNode, list);
-    PostOrder(root->rightNode, list);
-    std::cout << "key: " << root->key << " index: " << root->value << std::endl;
-    list.emplace_back(root->key);
-  }
-}
-
-template<typename ElemType>
-BSTreeNode<ElemType>* SearchRecursively(BSTreeNode<ElemType>* root, ElemType queryKey) {
-  if (root == nullptr or root->key == queryKey) {
-    return root;
+  void deleteTreeRecursively(TreeNode<T>*& root) {
+    if (root) {
+      deleteTreeRecursively(root->left);
+      deleteTreeRecursively(root->right);
+      delete (root);
+    }
   }
 
-  if (queryKey < root->key) {
-    return SearchRecursively(root->leftNode, queryKey);
+  void preOrderRecursively(TreeNode<T>*& root, std::vector<T>& list) {
+    if (root != nullptr) {
+      list.emplace_back(root->key);
+      preOrderRecursively(root->left, list);
+      preOrderRecursively(root->right, list);
+    }
   }
-  else if (queryKey > root->key) {
-    return SearchRecursively(root->rightNode, queryKey);
+
+  void inOrderRecursively(TreeNode<T>*& root, std::vector<T>& list) {
+    if (root != nullptr) {
+      inOrderRecursively(root->left, list);
+      list.emplace_back(root->key);
+      inOrderRecursively(root->right, list);
+    }
   }
-  return root;
-}
 
-template<typename ElemType>
-BSTreeNode<ElemType>* SearchIteratively(BSTreeNode<ElemType>* root, ElemType queryKey) {
-  BSTreeNode<ElemType>* currNode = root;
-
-  while (currNode != nullptr) {
-    if (currNode->key == queryKey)
-      return currNode;
-    else if (queryKey < root->key)
-      currNode = currNode->leftNode;
-    else if (queryKey > root->key)
-      currNode = currNode->rightNode;
+  void postOrderRecursively(TreeNode<T>*& root, std::vector<T>& list) {
+    if (root != nullptr) {
+      postOrderRecursively(root->left, list);
+      postOrderRecursively(root->right, list);
+      list.emplace_back(root->key);
+    }
   }
-  std::cout << "queryKey: " << queryKey << " not found!" << std::endl;
-  return currNode;
-}
 
-template <typename ElemType>
-bool KNNSearch(BSTreeNode<ElemType>* root, KNNResultSet<ElemType>& resultSet, ElemType queryKey) {
-  if (root == nullptr)
-    return false;
+  TreeNode<T>* searchRecursively(TreeNode<T>* root, T queryKey) {
+    if (root == nullptr or root->key == queryKey)
+      return root;
 
-  resultSet.AddPoint(abs(root->key - queryKey), root->value); // todo: what for a value
-  if (resultSet.GetWorstDist() == 0)
-    return true;
-  if (queryKey < root->key) { // ! <? <=
-    if (KNNSearch(root->leftNode, resultSet, queryKey))
-      return true;
-    else if (abs(root->key - queryKey) < resultSet.GetWorstDist())
-      return KNNSearch(root->rightNode, resultSet, queryKey);
+    if (queryKey < root->key)
+      return searchRecursively(root->left, queryKey);
+
+    return searchRecursively(root->right, queryKey);
+  }
+
+  bool kNNSearchRecursively(TreeNode<T>* root, T queryKey, KNNResultSet<T>& resultSet) {
+    if (root == nullptr)
+      return false;
+
+    resultSet.addPoint(abs(root->key - queryKey), root->value);
+
+    if (resultSet.getWorstDistance() == 0)
+      return true;  // return true means the worst distance among all elements is 0
+
+    if (queryKey <= root->key) {
+      if (kNNSearchRecursively(root->left, queryKey, resultSet)) // search left tree firstly
+        return true;
+      else if (abs(root->key - queryKey) < resultSet.getWorstDistance()) // if needed, search right tree
+        return kNNSearchRecursively(root->right, queryKey, resultSet);
+
+      return false;
+    }
+    else {
+      if (kNNSearchRecursively(root->right, queryKey, resultSet))
+        return true;
+      else if (abs(root->key - queryKey) < resultSet.getWorstDistance())
+        return kNNSearchRecursively(root->left, queryKey, resultSet);
+
+      return false;
+    }
+    // else {
+    //   std::cout << "warning" << std::endl;
+    // }
 
     return false;
   }
-  else if (queryKey > root->key) {
-    if (KNNSearch(root->rightNode, resultSet, queryKey))
-      return true;
-    else if (abs(root->key - queryKey) < resultSet.GetWorstDist())
-      return KNNSearch(root->leftNode, resultSet, queryKey);
+
+  bool radiusSearchRecursively(TreeNode<T>* root, T queryKey, RadiusKNNResultSet<T>& resultSet) {
+    if (root == nullptr)
+      return false;
+
+    resultSet.addPoint(abs(queryKey - root->key), root->value);
+
+    if (queryKey <= root->key) {
+      if (radiusSearchRecursively(root->left, queryKey, resultSet))
+        return true;
+      else if (abs(root->key - queryKey) < resultSet.getWorstDisntance())
+        return radiusSearchRecursively(root->right, queryKey, resultSet);
+
+      return false;
+    }
+    else {
+      if (radiusSearchRecursively(root->right, queryKey, resultSet))
+        return true;
+      else if (abs(root->key - queryKey) < resultSet.getWorstDisntance())
+        return radiusSearchRecursively(root->left, queryKey, resultSet);
+
+      return false;
+
+    }
 
     return false;
   }
-  else {
-    std::cout << "warning" << std::endl;
-  }
 
-  return false;
-}
-} // namespace my_
+private:
+  TreeNode<T>* root_;
+
+};
+
+} // namespace mypcl

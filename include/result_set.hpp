@@ -87,8 +87,8 @@ private:
 };
 
 class RadiusNNResultSet {
-private:
-
+public:
+  void addPoint
 };
 
 } // namespace mypcl

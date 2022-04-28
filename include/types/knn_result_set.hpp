@@ -28,7 +28,7 @@ public:
     }
   }
 
-  inline int size() { return count_; }
+  inline size_t size() { return count_; }
 
   inline bool isFull() { return count_ == capacity_; }
 
@@ -56,7 +56,7 @@ public:
     int currPosition = count_ - 1;
 
     while (currPosition > 0) {
-      if (distIndexList_[currPosition-1].distance > distance) {
+      if (distIndexList_[currPosition - 1].distance > distance) {
         distIndexList_[currPosition] = distIndexList_[currPosition - 1];
         --currPosition;
       }
@@ -79,5 +79,46 @@ private:
 
   std::vector<DistanceIndex<T>> distIndexList_;
 };
+
+template <typename T>
+class RadiusKNNResultSet {
+public:
+  explicit RadiusKNNResultSet(T radius) : radius_(radius) {}
+
+  inline size_t size() { return count_; }
+
+  inline T getWorstDisntance() { return worstDistance_; }
+
+  inline void getResult(std::vector<int>& indexList, std::vector<T>& distList) {
+    indexList.clear();
+    distList.clear();
+
+    for (const DistanceIndex<T>& d : distIndexList_) {
+      indexList.emplace_back(d.index);
+      distList.emplace_back(d.distance);
+    }
+  }
+
+
+  void addPoint(T distance, int index) {
+    comparisonCounter_ += 1;
+
+    if (distance < radius_) {
+      count_ += 1;
+      distIndexList_.emplace_back(DistanceIndex<T>(distance, index));
+    }
+  }
+
+private:
+  int comparisonCounter_ = 0; // how many times does comparison happens
+  int count_ = 0;
+
+  T radius_;
+  T worstDistance_;
+
+  std::vector<DistanceIndex<T>> distIndexList_;
+
+};
+
 
 } // namespace mypcl
